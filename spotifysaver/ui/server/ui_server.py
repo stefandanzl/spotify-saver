@@ -105,14 +105,15 @@ class UIServer:
             try:
                 while True:
                     time.sleep(1)
-                    
+
                     # Check if API process is still running
                     if self.api_process and self.api_process.poll() is not None:
                         self.logger.error("API server stopped unexpectedly")
                         break
-                        
+
             except KeyboardInterrupt:
                 self.logger.info("Received shutdown signal")
+                # No break needed here, exception will exit the try block
                 
         except Exception as e:
             self.logger.error(f"Error running servers: {e}")
