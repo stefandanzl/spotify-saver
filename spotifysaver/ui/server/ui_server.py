@@ -93,10 +93,10 @@ class UIServer:
             
             # Show information
             print("\n" + "="*60)
-            print("🎵 SpotifySaver UI Server Started!")
+            print("SpotifySaver UI Server Started!")
             print("="*60)
-            print(f"📱 Web Interface: http://{self.ui_host}:{self.ui_port}")
-            print(f"🔧 API Endpoint:  http://{self.api_host}:{self.api_port}")
+            print(f"Web Interface: http://{self.ui_host}:{self.ui_port}")
+            print(f"API Endpoint:  http://{self.api_host}:{self.api_port}")
             print("="*60)
             print("Press Ctrl+C to stop the servers")
             print("="*60 + "\n")

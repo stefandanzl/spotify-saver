@@ -53,6 +53,9 @@ class Config:
     # YouTube cookies file for bypassing age restrictions
     YTDLP_COOKIES_PATH = os.getenv("YTDLP_COOKIES_PATH", None)
 
+    # UI Language setting
+    UI_LANGUAGE = os.getenv("UI_LANGUAGE", "en")
+
     @classmethod
     def validate(cls):
         """Validate that critical environment variables are configured.

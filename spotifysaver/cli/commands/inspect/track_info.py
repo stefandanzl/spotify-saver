@@ -21,10 +21,10 @@ def show_track_info(track: Track, verbose: bool):
                        URI and genres
     """
     click.secho(f"\n🎵 Track: {track.name}", fg="cyan", bold=True)
-    click.echo(f"👤 Artista(s): {', '.join(track.artists)}")
-    click.echo(f"⏱ Duración: {track.duration // 60}:{track.duration % 60:02d}")
+    click.echo(f"👤 Artist(s): {', '.join(track.artists)}")
+    click.echo(f"⏱ Duration: {track.duration // 60}:{track.duration % 60:02d}")
 
     if verbose:
-        click.echo(f"\n🔍 Detalles técnicos:")
+        click.echo(f"\n🔍 Technical details:")
         click.echo(f"URI: {track.uri}")
-        click.echo(f"Géneros: {', '.join(track.genres) if track.genres else 'N/A'}")
+        click.echo(f"Genres: {', '.join(track.genres) if track.genres else 'N/A'}")

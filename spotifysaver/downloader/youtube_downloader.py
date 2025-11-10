@@ -452,7 +452,7 @@ class YouTubeDownloader:
 
                 yt_url = self.searcher.search_track(track)
                 if not yt_url:
-                    raise ValueError(f"No se encontró en YouTube Music: {track.name}")
+                    raise ValueError(f"Not found on YouTube Music: {track.name}")
 
                 audio_path, _ = self.download_track(
                     track=track,
@@ -575,7 +575,7 @@ class YouTubeDownloader:
             tuple: (successful_downloads, total_tracks)
         """
         if not playlist.name or not playlist.tracks:
-            self.logger.error("Playlist inválida: sin nombre o tracks vacíos")
+            self.logger.error("Invalid playlist: no name or empty tracks")
             return 0, 0
 
         output_dir = self.base_dir / playlist.name
