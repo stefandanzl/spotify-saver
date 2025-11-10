@@ -110,7 +110,7 @@ class ScoreMatchCalculator:
         if not album_data or not sp_album:
             return 0
         album_name = (
-            album_data["name"].lower()
+            album_data.get("name", "").lower()
             if isinstance(album_data, dict)
             else str(album_data).lower()
         )
