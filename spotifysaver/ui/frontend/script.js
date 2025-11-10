@@ -15,7 +15,7 @@ class SpotifySaverUI {
         
         downloadBtn.addEventListener('click', () => this.startDownload());
         
-        // Permitir iniciar descarga con Enter
+        // Allow starting download with Enter
         spotifyUrl.addEventListener('keypress', (e) => {
             if (e.key === 'Enter' && !this.downloadInProgress) {
                 this.startDownload();
@@ -27,12 +27,12 @@ class SpotifySaverUI {
         try {
             const response = await fetch(this.apiUrlHealth);
             if (response.ok) {
-                this.updateStatus('API conectada y lista', 'success');
+                this.updateStatus('API connected and ready', 'success');
             } else {
-                this.updateStatus('Error de conexión con la API', 'error');
+                this.updateStatus('API connection error', 'error');
             }
         } catch (error) {
-            this.updateStatus('API no disponible. Asegúrate de que esté ejecutándose.', 'error');
+            this.updateStatus('API unavailable. Make sure it is running.', 'error');
         }
     }
 
@@ -53,17 +53,17 @@ class SpotifySaverUI {
 
     validateForm() {
         const formData = this.getFormData();
-        
+
         if (!formData.spotify_url) {
-            this.updateStatus('Por favor, ingresa una URL de Spotify', 'error');
+            this.updateStatus('Please enter a Spotify URL', 'error');
             return false;
         }
-        
+
         if (!formData.spotify_url.includes('spotify.com')) {
-            this.updateStatus('La URL debe ser de Spotify', 'error');
+            this.updateStatus('URL must be from Spotify', 'error');
             return false;
         }
-        
+
         return true;
     }
 
@@ -83,9 +83,9 @@ class SpotifySaverUI {
         const formData = this.getFormData();
         
         try {
-            this.updateStatus('Iniciando descarga...', 'info');
-            this.addLogEntry('Enviando solicitud de descarga...', 'info');
-            
+            this.updateStatus('Starting download...', 'info');
+            this.addLogEntry('Sending download request...', 'info');
+
             const response = await fetch(`${this.apiUrl}/download`, {
                 method: 'POST',
                 headers: {
@@ -96,17 +96,17 @@ class SpotifySaverUI {
 
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.detail || 'Error en la descarga');
+                throw new Error(errorData.detail || 'Download error');
             }
 
             const result = await response.json();
-            
+
             if (result.task_id) {
-                this.addLogEntry(`Descarga iniciada con ID: ${result.task_id}`, 'success');
+                this.addLogEntry(`Download started with ID: ${result.task_id}`, 'success');
                 this.startProgressMonitoring(result.task_id);
             } else {
-                this.updateStatus('Descarga completada exitosamente', 'success');
-                this.addLogEntry('Descarga completada', 'success');
+                this.updateStatus('Download completed successfully', 'success');
+                this.addLogEntry('Download completed', 'success');
                 this.downloadInProgress = false;
                 this.updateUI(false);
             }
@@ -120,8 +120,8 @@ class SpotifySaverUI {
     }
 
     startProgressMonitoring(taskId) {
-        // Monitorear progreso usando polling
-        const pollInterval = 2000; // 2 segundo
+        // Monitor progress using polling
+        const pollInterval = 2000; // 2 seconds
         let progress = 0;
         
         const checkProgress = async () => {
@@ -132,31 +132,31 @@ class SpotifySaverUI {
                     
                     if (status.status === 'completed') {
                         this.updateProgress(100);
-                        this.updateStatus('Descarga completada exitosamente', 'success');
-                        this.addLogEntry('Descarga completada', 'success');
+                        this.updateStatus('Download completed successfully', 'success');
+                        this.addLogEntry('Download completed', 'success');
                         this.downloadInProgress = false;
                         this.updateUI(false);
                         return;
                     } else if (status.status === 'failed') {
-                        this.updateStatus(`Error: ${status.message || 'Descarga fallida'}`, 'error');
-                        this.addLogEntry(`Error: ${status.message || 'Descarga fallida'}`, 'error');
+                        this.updateStatus(`Error: ${status.message || 'Download failed'}`, 'error');
+                        this.addLogEntry(`Error: ${status.message || 'Download failed'}`, 'error');
                         this.downloadInProgress = false;
                         this.updateUI(false);
                         return;
                     } else if (status.status === 'processing') {
                         const currentProgress = status.progress || 0;
                         this.updateProgress(currentProgress);
-                        this.updateStatus(`Descargando... ${Math.round(currentProgress)}%`, 'info');
-                        
+                        this.updateStatus(`Downloading... ${Math.round(currentProgress)}%`, 'info');
+
                         if (status.current_track) {
-                            this.addLogEntry(`Descargando: ${status.current_track}`, 'info');
+                            this.addLogEntry(`Downloading: ${status.current_track}`, 'info');
                         }
                     }
                     
-                    // Continuar monitoreando
+                    // Continue monitoring
                     setTimeout(checkProgress, pollInterval);
                 } else {
-                    // Si no hay endpoint de estado, usar simulación
+                    // If no status endpoint, use simulation
                     this.simulateProgress();
                 }
             } catch (error) {
@@ -164,13 +164,13 @@ class SpotifySaverUI {
                 this.simulateProgress();
             }
         };
-        
-        // Iniciar monitoreo
+
+        // Start monitoring
         checkProgress();
     }
-    
+
     simulateProgress() {
-        // Simulación de progreso para compatibilidad
+        // Progress simulation for compatibility
         let progress = 0;
         const interval = setInterval(() => {
             progress += Math.random() * 10;
@@ -178,23 +178,23 @@ class SpotifySaverUI {
             if (progress >= 100) {
                 progress = 100;
                 this.updateProgress(progress);
-                this.updateStatus('Descarga completada exitosamente', 'success');
-                this.addLogEntry('Descarga completada', 'success');
+                this.updateStatus('Download completed successfully', 'success');
+                this.addLogEntry('Download completed', 'success');
                 this.downloadInProgress = false;
                 this.updateUI(false);
                 clearInterval(interval);
             } else {
                 this.updateProgress(progress);
-                this.updateStatus(`Descargando... ${Math.round(progress)}%`, 'info');
-                
-                // Simular mensajes de progreso
+                this.updateStatus(`Downloading... ${Math.round(progress)}%`, 'info');
+
+                // Simulate progress messages
                 if (Math.random() > 0.7) {
                     const messages = [
-                        'Buscando canciones...',
-                        'Descargando pista...',
-                        'Aplicando metadatos...',
-                        'Generando miniatura...',
-                        'Guardando archivo...'
+                        'Searching songs...',
+                        'Downloading track...',
+                        'Applying metadata...',
+                        'Generating thumbnail...',
+                        'Saving file...'
                     ];
                     const randomMessage = messages[Math.floor(Math.random() * messages.length)];
                     this.addLogEntry(randomMessage, 'info');
@@ -209,11 +209,11 @@ class SpotifySaverUI {
         
         if (downloading) {
             downloadBtn.disabled = true;
-            downloadBtn.textContent = '⏳ Descargando...';
+            downloadBtn.textContent = '⏳ Downloading...';
             progressContainer.classList.remove('hidden');
         } else {
             downloadBtn.disabled = false;
-            downloadBtn.textContent = '🎵 Iniciar Descarga';
+            downloadBtn.textContent = '🎵 Start Download';
             progressContainer.classList.add('hidden');
             this.updateProgress(0);
         }
@@ -250,7 +250,7 @@ class SpotifySaverUI {
     }
 }
 
-// Inicializar la aplicación cuando se carga la página
+// Initialize the application when the page loads
 document.addEventListener('DOMContentLoaded', () => {
     new SpotifySaverUI();
 });
