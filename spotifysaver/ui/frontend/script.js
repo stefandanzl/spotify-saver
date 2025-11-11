@@ -3,18 +3,21 @@ class SpotifySaverUI {
         this.apiUrl = 'http://localhost:8000/api/v1';
         this.apiUrlHealth = 'http://localhost:8000/health';
         this.downloadInProgress = false;
+        this.currentTaskId = null;
         this.eventSource = null;
-        
+
         this.initializeEventListeners();
         this.checkApiStatus();
     }
 
     initializeEventListeners() {
         const downloadBtn = document.getElementById('download-btn');
+        const cancelBtn = document.getElementById('cancel-btn');
         const spotifyUrl = document.getElementById('spotify-url');
-        
+
         downloadBtn.addEventListener('click', () => this.startDownload());
-        
+        cancelBtn.addEventListener('click', () => this.cancelDownload());
+
         // Allow starting download with Enter
         spotifyUrl.addEventListener('keypress', (e) => {
             if (e.key === 'Enter' && !this.downloadInProgress) {
@@ -102,6 +105,7 @@ class SpotifySaverUI {
             const result = await response.json();
 
             if (result.task_id) {
+                this.currentTaskId = result.task_id;
                 this.addLogEntry(`Download started with ID: ${result.task_id}`, 'success');
                 this.startProgressMonitoring(result.task_id);
             } else {
@@ -116,6 +120,34 @@ class SpotifySaverUI {
             this.addLogEntry(`Error: ${error.message}`, 'error');
             this.downloadInProgress = false;
             this.updateUI(false);
+        }
+    }
+
+    async cancelDownload() {
+        if (!this.downloadInProgress || !this.currentTaskId) {
+            return;
+        }
+
+        try {
+            this.addLogEntry('Cancelling download...', 'warning');
+            this.updateStatus('Cancelling download...', 'warning');
+
+            const response = await fetch(`${this.apiUrl}/download/${this.currentTaskId}/cancel`, {
+                method: 'GET'
+            });
+
+            if (response.ok) {
+                this.addLogEntry('Download cancelled successfully', 'warning');
+                this.updateStatus('Download cancelled', 'warning');
+                this.downloadInProgress = false;
+                this.currentTaskId = null;
+                this.updateUI(false);
+            } else {
+                const errorData = await response.json();
+                this.addLogEntry(`Failed to cancel: ${errorData.detail || 'Unknown error'}`, 'error');
+            }
+        } catch (error) {
+            this.addLogEntry(`Error cancelling download: ${error.message}`, 'error');
         }
     }
 
@@ -135,12 +167,21 @@ class SpotifySaverUI {
                         this.updateStatus('Download completed successfully', 'success');
                         this.addLogEntry('Download completed', 'success');
                         this.downloadInProgress = false;
+                        this.currentTaskId = null;
                         this.updateUI(false);
                         return;
                     } else if (status.status === 'failed') {
                         this.updateStatus(`Error: ${status.message || 'Download failed'}`, 'error');
                         this.addLogEntry(`Error: ${status.message || 'Download failed'}`, 'error');
                         this.downloadInProgress = false;
+                        this.currentTaskId = null;
+                        this.updateUI(false);
+                        return;
+                    } else if (status.status === 'cancelled') {
+                        this.updateStatus('Download cancelled', 'warning');
+                        this.addLogEntry('Download was cancelled', 'warning');
+                        this.downloadInProgress = false;
+                        this.currentTaskId = null;
                         this.updateUI(false);
                         return;
                     } else if (status.status === 'processing') {
@@ -173,14 +214,21 @@ class SpotifySaverUI {
         // Progress simulation for compatibility
         let progress = 0;
         const interval = setInterval(() => {
+            // Check if download was cancelled
+            if (!this.downloadInProgress) {
+                clearInterval(interval);
+                return;
+            }
+
             progress += Math.random() * 10;
-            
+
             if (progress >= 100) {
                 progress = 100;
                 this.updateProgress(progress);
                 this.updateStatus('Download completed successfully', 'success');
                 this.addLogEntry('Download completed', 'success');
                 this.downloadInProgress = false;
+                this.currentTaskId = null;
                 this.updateUI(false);
                 clearInterval(interval);
             } else {
@@ -205,15 +253,20 @@ class SpotifySaverUI {
 
     updateUI(downloading) {
         const downloadBtn = document.getElementById('download-btn');
+        const cancelBtn = document.getElementById('cancel-btn');
         const progressContainer = document.getElementById('progress-container');
-        
+
         if (downloading) {
             downloadBtn.disabled = true;
             downloadBtn.textContent = '⏳ Downloading...';
+            cancelBtn.disabled = false;
+            cancelBtn.classList.remove('hidden');
             progressContainer.classList.remove('hidden');
         } else {
             downloadBtn.disabled = false;
             downloadBtn.textContent = '🎵 Start Download';
+            cancelBtn.disabled = true;
+            cancelBtn.classList.add('hidden');
             progressContainer.classList.add('hidden');
             this.updateProgress(0);
         }
