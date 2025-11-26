@@ -122,19 +122,47 @@ class SpotifyAPI:
     @lru_cache(maxsize=32)
     def _fetch_playlist_data(self, playlist_url: str) -> dict:
         """Fetch raw playlist data from the API.
-        
+
         Args:
             playlist_url: Spotify URL or URI for the playlist
-            
+
         Returns:
             dict: Raw playlist data from Spotify API
-            
+
         Raises:
             ValueError: If playlist is not found or URL is invalid
         """
         try:
             self.logger.info(f"Fetching playlist data: {playlist_url}")
-            return self.sp.playlist(playlist_url)
+
+            # First get basic playlist info
+            playlist_data = self.sp.playlist(playlist_url)
+
+            # Then fetch all tracks using pagination
+            all_tracks = []
+            offset = 0
+            limit = 50  # Spotify API limit per request
+
+            while True:
+                tracks_data = self.sp.playlist_items(
+                    playlist_url,
+                    offset=offset,
+                    limit=limit,
+                    fields='items.track.id,items.track.name,items.track.duration_ms,items.track.uri,items.track.artists,items.track.album,total,next'
+                )
+
+                all_tracks.extend(tracks_data['items'])
+
+                # Check if there are more tracks to fetch
+                if not tracks_data['next'] or len(all_tracks) >= tracks_data['total']:
+                    break
+
+                offset += limit
+
+            # Replace the tracks in the original playlist data
+            playlist_data['tracks']['items'] = all_tracks
+
+            return playlist_data
         except spotipy.exceptions.SpotifyException as e:
             self.logger.error(f"Error fetching playlist data: {e}")
             raise ValueError("Playlist not found or invalid URL") from e

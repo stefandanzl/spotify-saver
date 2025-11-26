@@ -129,6 +129,8 @@ class YouTubeDownloader:
             "verbose": is_verbose,
             "extract_flat": False,
             "logger": self._get_ydl_logger(),
+            # Skip existing files to avoid unnecessary downloads
+            "skipexisting": True,
             # Parámetros de cookies y headers para evitar bloqueos
             "cookiefile": (
                 str(Config.YTDLP_COOKIES_PATH) if Config.YTDLP_COOKIES_PATH else None
@@ -344,6 +346,24 @@ class YouTubeDownloader:
         if not yt_url:
             self.logger.error(f"No match found for: {track.name}")
             return None, None
+
+        # Check if file already exists before download
+        expected_extensions = ['.m4a', '.mp3', '.opus']
+        existing_file = None
+        for ext in expected_extensions:
+            potential_file = output_path.with_suffix(ext)
+            if potential_file.exists():
+                existing_file = potential_file
+                break
+
+        if existing_file:
+            self.logger.info(f"Skipping existing file: {existing_file}")
+            # Handle lyrics if requested
+            if download_lyrics and not track.lyrics:
+                success = self._save_lyrics(track, existing_file)
+                updated_track = track.with_lyrics_status(success)
+                return existing_file, updated_track
+            return existing_file, track
 
         try:
             # 1. Descarga el audio
