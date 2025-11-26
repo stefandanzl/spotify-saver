@@ -347,23 +347,24 @@ class YouTubeDownloader:
             self.logger.error(f"No match found for: {track.name}")
             return None, None
 
-        # Check if file already exists before download
-        expected_extensions = ['.m4a', '.mp3', '.opus']
-        existing_file = None
-        for ext in expected_extensions:
-            potential_file = output_path.with_suffix(ext)
-            if potential_file.exists():
-                existing_file = potential_file
-                break
+        # Check if file already exists before download (if skip_existing is enabled)
+        if Config.SKIP_EXISTING:
+            expected_extensions = ['.m4a', '.mp3', '.opus']
+            existing_file = None
+            for ext in expected_extensions:
+                potential_file = output_path.with_suffix(ext)
+                if potential_file.exists():
+                    existing_file = potential_file
+                    break
 
-        if existing_file:
-            self.logger.info(f"Skipping existing file: {existing_file}")
-            # Handle lyrics if requested
-            if download_lyrics and not track.lyrics:
-                success = self._save_lyrics(track, existing_file)
-                updated_track = track.with_lyrics_status(success)
-                return existing_file, updated_track
-            return existing_file, track
+            if existing_file:
+                self.logger.info(f"Skipping existing file: {existing_file}")
+                # Handle lyrics if requested
+                if download_lyrics and not track.lyrics:
+                    success = self._save_lyrics(track, existing_file)
+                    updated_track = track.with_lyrics_status(success)
+                    return existing_file, updated_track
+                return existing_file, track
 
         try:
             # 1. Descarga el audio

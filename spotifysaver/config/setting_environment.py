@@ -53,6 +53,9 @@ class Config:
     # YouTube cookies file for bypassing age restrictions
     YTDLP_COOKIES_PATH = os.getenv("YTDLP_COOKIES_PATH", None)
 
+    # Skip existing files setting (defaults to true)
+    SKIP_EXISTING = os.getenv("SKIP_EXISTING", "true").lower() == "true"
+
     # UI Language setting
     UI_LANGUAGE = os.getenv("UI_LANGUAGE", "en")
 
